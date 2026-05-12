@@ -1,94 +1,84 @@
 import { useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useDashboardData } from '../hooks/useDashboardData';
+import { Link } from 'react-router-dom';
 import {
-  FiCheckCircle,
-  FiZap,
-  FiTrendingUp,
-  FiAward,
+  FiCheckCircle, FiZap, FiTrendingUp, FiAward,
+  FiArrowRight, FiLoader,
 } from 'react-icons/fi';
 
-/* ─── Mock Data (replace with real API calls later) ─── */
-const MOCK_STATS = {
-  totalSolved: 47,
-  streak: 12,
-  rank: 42,
-  accuracy: 78,
+/* ── Pattern accent colours ── */
+const PATTERN_COLORS = {
+  'sliding-window': '#3b82f6',
+  'two-pointers': '#8b5cf6',
+  'binary-search': '#f59e0b',
+  'dynamic-programming': '#ef4444',
+  'graphs': '#10b981',
+  'backtracking': '#f97316',
+  'linked-list': '#06b6d4',
+  'trees': '#22c55e',
+  'stacks-queues': '#a855f7',
+  'greedy': '#eab308',
+  'arrays': '#6366f1',
+  'strings': '#ec4899',
+  'recursion': '#14b8a6',
+  'heap-pq': '#8b5cf6',
+  'bit-manipulation': '#64748b',
 };
 
-const PATTERN_DATA = [
-  { name: 'Sliding Window', solved: 8, total: 15, color: '#a855f7' },
-  { name: 'Dynamic Programming', solved: 4, total: 20, color: '#6366f1' },
-  { name: 'Graphs', solved: 2, total: 12, color: '#06b6d4' },
-  { name: 'Two Pointers', solved: 6, total: 18, color: '#f43f5e' },
-  { name: 'Backtracking', solved: 0, total: 10, color: '#f59e0b' },
-  { name: 'Binary Search', solved: 9, total: 14, color: '#22c55e' },
-];
+/* ── Heatmap helpers ── */
+function buildHeatmapGrid(apiData) {
+  const dateMap = {};
+  for (const item of apiData) dateMap[item.date] = item.count;
 
-/* ─── Heatmap helpers ─── */
-function generateHeatmapData() {
   const today = new Date();
-  const data = [];
-  // ~26 weeks back (≈6 months)
+  const raw = [];
   for (let i = 182; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    // Random 0-5 contributions for demo
-    const count = Math.random() < 0.35 ? 0 : Math.floor(Math.random() * 5) + 1;
-    data.push({ date: d, count });
+    const key = d.toISOString().split('T')[0];
+    raw.push({ date: d, count: dateMap[key] || 0 });
   }
-  return data;
+  return raw;
 }
 
 function getHeatColor(count) {
   if (count === 0) return 'rgba(255,255,255,0.04)';
   if (count === 1) return 'rgba(168,85,247,0.25)';
   if (count === 2) return 'rgba(168,85,247,0.45)';
-  if (count === 3) return 'rgba(168,85,247,0.6)';
-  if (count === 4) return 'rgba(168,85,247,0.8)';
+  if (count === 3) return 'rgba(168,85,247,0.62)';
+  if (count === 4) return 'rgba(168,85,247,0.80)';
   return '#a855f7';
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS = ['Mon', '', 'Wed', '', 'Fri', '', ''];
 
-/* ─── Activity Heatmap Component ─── */
-function ActivityHeatmap() {
-  const heatmapData = useMemo(() => generateHeatmapData(), []);
+/* ── Activity Heatmap ── */
+function ActivityHeatmap({ data }) {
+  const heatmapData = useMemo(() => buildHeatmapGrid(data), [data]);
 
-  // Group by weeks (columns)
   const weeks = useMemo(() => {
     const w = [];
-    let currentWeek = [];
-    // Pad start: the first date may not be a Sunday
+    let cur = [];
     const firstDay = heatmapData[0].date.getDay();
-    for (let i = 0; i < firstDay; i++) {
-      currentWeek.push(null);
-    }
+    for (let i = 0; i < firstDay; i++) cur.push(null);
     for (const entry of heatmapData) {
-      currentWeek.push(entry);
-      if (currentWeek.length === 7) {
-        w.push(currentWeek);
-        currentWeek = [];
-      }
+      cur.push(entry);
+      if (cur.length === 7) { w.push(cur); cur = []; }
     }
-    if (currentWeek.length > 0) {
-      w.push(currentWeek);
-    }
+    if (cur.length) w.push(cur);
     return w;
   }, [heatmapData]);
 
-  // Month labels
   const monthLabels = useMemo(() => {
     const labels = [];
-    let lastMonth = -1;
+    let last = -1;
     weeks.forEach((week, i) => {
-      const firstDate = week.find((d) => d !== null);
-      if (firstDate) {
-        const m = firstDate.date.getMonth();
-        if (m !== lastMonth) {
-          labels.push({ month: MONTHS[m], col: i });
-          lastMonth = m;
-        }
+      const first = week.find(d => d !== null);
+      if (first) {
+        const m = first.date.getMonth();
+        if (m !== last) { labels.push({ month: MONTHS[m], col: i }); last = m; }
       }
     });
     return labels;
@@ -100,41 +90,23 @@ function ActivityHeatmap() {
         <h2>Activity</h2>
         <div className="heatmap-legend">
           <span className="heatmap-legend-label">Less</span>
-          {[0, 1, 2, 3, 4, 5].map((v) => (
-            <span
-              key={v}
-              className="heatmap-legend-box"
-              style={{ background: getHeatColor(v) }}
-            />
+          {[0,1,2,3,4,5].map(v => (
+            <span key={v} className="heatmap-legend-box" style={{ background: getHeatColor(v) }} />
           ))}
           <span className="heatmap-legend-label">More</span>
         </div>
       </div>
-
       <div className="heatmap-scroll">
         <div className="heatmap-grid-container">
-          {/* Day labels */}
           <div className="heatmap-day-labels">
-            {DAYS.map((d, i) => (
-              <span key={i} className="heatmap-day-label">{d}</span>
-            ))}
+            {DAYS.map((d, i) => <span key={i} className="heatmap-day-label">{d}</span>)}
           </div>
-
           <div className="heatmap-columns-wrapper">
-            {/* Month labels */}
             <div className="heatmap-month-row">
               {monthLabels.map((ml, i) => (
-                <span
-                  key={i}
-                  className="heatmap-month-label"
-                  style={{ gridColumn: ml.col + 1 }}
-                >
-                  {ml.month}
-                </span>
+                <span key={i} className="heatmap-month-label" style={{ gridColumn: ml.col + 1 }}>{ml.month}</span>
               ))}
             </div>
-
-            {/* Grid */}
             <div className="heatmap-grid">
               {weeks.map((week, wi) => (
                 <div key={wi} className="heatmap-col">
@@ -143,11 +115,7 @@ function ActivityHeatmap() {
                       key={di}
                       className="heatmap-cell"
                       style={{ background: day ? getHeatColor(day.count) : 'transparent' }}
-                      title={
-                        day
-                          ? `${day.date.toDateString()}: ${day.count} problem${day.count !== 1 ? 's' : ''}`
-                          : ''
-                      }
+                      title={day ? `${day.date.toDateString()}: ${day.count} problem${day.count !== 1 ? 's' : ''}` : ''}
                     />
                   ))}
                 </div>
@@ -160,96 +128,141 @@ function ActivityHeatmap() {
   );
 }
 
-/* ─── Pattern Progress Card ─── */
-function PatternCard({ name, solved, total, color }) {
+/* ── Pattern Progress Card ── */
+function PatternCard({ pattern_tag, solved, total }) {
+  const color = PATTERN_COLORS[pattern_tag] || '#8b5cf6';
   const pct = total > 0 ? (solved / total) * 100 : 0;
+  const name = pattern_tag.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
   return (
     <div className="pattern-card">
       <div className="pattern-card-header">
         <span className="pattern-card-name">{name}</span>
-        <span className="pattern-card-count" style={{ color }}>
-          {solved}/{total}
-        </span>
+        <span className="pattern-card-count" style={{ color }}>{solved}/{total}</span>
       </div>
       <div className="pattern-card-bar-track">
-        <div
-          className="pattern-card-bar-fill"
-          style={{ width: `${pct}%`, background: color }}
-        />
+        <div className="pattern-card-bar-fill" style={{ width: `${pct}%`, background: color }} />
       </div>
       <p className="pattern-card-pct">{Math.round(pct)}% complete</p>
     </div>
   );
 }
 
-/* ─── Main Dashboard Overview ─── */
+/* ── Stat Card ── */
+function StatCard({ icon, value, label, colorClass }) {
+  return (
+    <div className="welcome-stat">
+      <div className={`welcome-stat-icon ${colorClass}`}>{icon}</div>
+      <div>
+        <p className="welcome-stat-value">{value}</p>
+        <p className="welcome-stat-label">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main ── */
 export default function DashboardOverview() {
   const { user } = useAuth();
+  const { patterns, heatmap, stats, isLoading } = useDashboardData();
+
+  const displayStats = {
+    totalSolved: stats?.totalSolved ?? 0,
+    streak: stats?.currentStreak ?? 0,
+    longestStreak: stats?.longestStreak ?? 0,
+    questionsToday: stats?.questionsToday ?? 0,
+  };
+
+  const topPatterns = useMemo(() => {
+    if (!patterns || patterns.length === 0) return [];
+    return [...patterns].sort((a, b) => b.solved - a.solved).slice(0, 6);
+  }, [patterns]);
+
+  const greet = () => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
 
   return (
     <div className="dashboard-overview">
-      {/* ── Welcome Banner + Stats ── */}
+
+      {/* Welcome Banner */}
       <div className="welcome-banner">
         <div className="welcome-text">
           <h1>
-            Welcome back, <span className="welcome-name">{user?.name || 'Student'}</span>
+            {greet()}, <span className="welcome-name">{user?.name || 'Student'}</span> 👋
           </h1>
           <p>Keep grinding — your next placement drive is closer than you think.</p>
         </div>
-
         <div className="welcome-stats">
-          <div className="welcome-stat">
-            <div className="welcome-stat-icon purple">
-              <FiCheckCircle />
-            </div>
-            <div>
-              <p className="welcome-stat-value">{MOCK_STATS.totalSolved}</p>
-              <p className="welcome-stat-label">Total Solved</p>
-            </div>
-          </div>
-          <div className="welcome-stat">
-            <div className="welcome-stat-icon orange">
-              <FiZap />
-            </div>
-            <div>
-              <p className="welcome-stat-value">{MOCK_STATS.streak} days</p>
-              <p className="welcome-stat-label">Streak</p>
-            </div>
-          </div>
-          <div className="welcome-stat">
-            <div className="welcome-stat-icon blue">
-              <FiTrendingUp />
-            </div>
-            <div>
-              <p className="welcome-stat-value">{MOCK_STATS.accuracy}%</p>
-              <p className="welcome-stat-label">Accuracy</p>
-            </div>
-          </div>
-          <div className="welcome-stat">
-            <div className="welcome-stat-icon green">
-              <FiAward />
-            </div>
-            <div>
-              <p className="welcome-stat-value">#{MOCK_STATS.rank}</p>
-              <p className="welcome-stat-label">Rank</p>
-            </div>
-          </div>
+          <StatCard icon={<FiCheckCircle />} value={displayStats.totalSolved} label="Total Solved" colorClass="purple" />
+          <StatCard icon={<FiZap />}         value={`${displayStats.streak}d`}  label="Current Streak" colorClass="orange" />
+          <StatCard icon={<FiTrendingUp />}  value={displayStats.questionsToday} label="Today" colorClass="blue" />
+          <StatCard icon={<FiAward />}       value={`${displayStats.longestStreak}d`} label="Best Streak" colorClass="green" />
         </div>
       </div>
 
-      {/* ── Activity Heatmap ── */}
-      <ActivityHeatmap />
+      {/* Loading state */}
+      {isLoading && (
+        <div className="dash-loading">
+          <FiLoader className="dash-spin" size={24} />
+          <span>Loading your progress…</span>
+        </div>
+      )}
 
-      {/* ── Pattern Progress Section ── */}
-      <div className="patterns-section">
-        <h2>Pattern Progress</h2>
-        <div className="patterns-grid">
-          {PATTERN_DATA.map((p) => (
-            <PatternCard key={p.name} {...p} />
-          ))}
+      {/* Heatmap */}
+      {!isLoading && <ActivityHeatmap data={heatmap} />}
+
+      {/* Pattern Progress */}
+      {!isLoading && (
+        <div className="patterns-section">
+          <div className="patterns-section-header">
+            <h2>Pattern Progress</h2>
+            <Link to="/dashboard/patterns" className="patterns-see-all">
+              View All <FiArrowRight size={14} />
+            </Link>
+          </div>
+          {topPatterns.length > 0 ? (
+            <div className="patterns-grid">
+              {topPatterns.map(p => <PatternCard key={p.pattern_tag} {...p} />)}
+            </div>
+          ) : (
+            <div className="patterns-empty-hint">
+              <p>Start solving questions in the <Link to="/dashboard/compiler">Compiler</Link> to see your pattern progress here.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Quick Links */}
+      <div className="quick-links">
+        <h2>Quick Actions</h2>
+        <div className="quick-links-grid">
+          <Link to="/dashboard/compiler" className="quick-link-card compiler-card">
+            <span className="quick-link-icon">💻</span>
+            <span className="quick-link-label">Practice Coding</span>
+          </Link>
+          <Link to="/dashboard/patterns" className="quick-link-card pattern-card-link">
+            <span className="quick-link-icon">🧩</span>
+            <span className="quick-link-label">DSA Patterns</span>
+          </Link>
+          <Link to="/dashboard/notes" className="quick-link-card notes-card">
+            <span className="quick-link-icon">📝</span>
+            <span className="quick-link-label">Study Notes</span>
+          </Link>
+          <Link to="/dashboard/aptitude" className="quick-link-card aptitude-card">
+            <span className="quick-link-icon">🧠</span>
+            <span className="quick-link-label">Aptitude Quiz</span>
+          </Link>
+          <Link to="/dashboard/companies" className="quick-link-card companies-card">
+            <span className="quick-link-icon">🏢</span>
+            <span className="quick-link-label">Companies</span>
+          </Link>
         </div>
       </div>
+
     </div>
   );
 }

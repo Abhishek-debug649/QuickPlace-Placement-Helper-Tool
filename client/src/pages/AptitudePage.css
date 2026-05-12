@@ -75,7 +75,7 @@
 /* ── Category Cards ── */
 .category-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 18px;
 }
 
@@ -300,10 +300,46 @@
   100% { transform: translateX(0); }
 }
 
-.quiz-difficulty {
-  margin-top: 16px;
+.quiz-option.dimmed {
+  opacity: 0.45;
+}
+
+.quiz-option-text {
+  flex: 1;
+  text-align: left;
+}
+
+.quiz-option-tick {
+  font-size: 18px;
+  color: #4ade80;
+  margin-left: auto;
+}
+
+.quiz-option-cross {
+  font-size: 18px;
+  color: #f87171;
+  margin-left: auto;
+}
+
+.quiz-explanation {
+  margin-top: 18px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(168, 85, 247, 0.07);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  font-size: 14px;
+  line-height: 1.6;
   display: flex;
-  justify-content: flex-end;
+  gap: 10px;
+  align-items: flex-start;
+  animation: fadeIn 0.3s ease;
+}
+.quiz-explanation-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Results ── */

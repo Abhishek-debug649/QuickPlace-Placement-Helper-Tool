@@ -152,7 +152,11 @@ export default function AptitudePage() {
               onClick={() => startQuiz(cat.name)}
             >
               <div className="category-card-icon">
-                {cat.name === 'quantitative' ? '📊' : cat.name === 'logical' ? '🧩' : '📝'}
+                {cat.name === 'quantitative' ? '📊'
+                  : cat.name === 'logical' ? '🧩'
+                  : cat.name === 'verbal' ? '📝'
+                  : cat.name === 'technical' ? '💻'
+                  : '🎯'}
               </div>
               <h3 className="category-card-title">{cat.displayName}</h3>
               <p className="category-card-count">{cat.count} questions</p>

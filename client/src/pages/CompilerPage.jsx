@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import ProblemPanel from '../components/compiler/ProblemPanel';
 import LanguageSelector from '../components/compiler/LanguageSelector';
 import Terminal from '../components/compiler/Terminal';
+import toast from 'react-hot-toast';
 import './CompilerPage.css';
 
 const CodeEditor = lazy(() => import('../components/compiler/CodeEditor'));
@@ -104,15 +105,18 @@ export default function CompilerPage() {
           body: JSON.stringify({ status: 'solved' }),
         });
         setIsSolved(true);
+        toast.success(`"${selectedQuestion.title}" marked as solved! 🎉`);
       } else {
         await fetch(`${API_URL}/api/progress/${selectedQuestion.id}`, {
           method: 'DELETE',
           headers,
         });
         setIsSolved(false);
+        toast('Question unmarked', { icon: '↩️' });
       }
     } catch (err) {
       console.error('Mark solved error:', err);
+      toast.error('Failed to update progress');
     }
   };
 

@@ -35,7 +35,7 @@ export const getQuiz = async (req, res, next) => {
 
     const { data, error } = await supabase
       .from('aptitude_questions')
-      .select('id, category, question_text, option_a, option_b, option_c, option_d, difficulty')
+      .select('id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, difficulty')
       .eq('category', category);
 
     if (error) throw error;

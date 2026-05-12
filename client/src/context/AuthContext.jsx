@@ -43,13 +43,27 @@ export function AuthProvider({ children }) {
   };
 
   const login = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: 'http://localhost:5173/auth/callback',
-      },
-    });
-    if (error) console.error('Error logging in:', error.message);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      if (error) {
+        console.error('Google OAuth error:', error.message);
+        // Will be caught by LoginPage's urlError display
+        throw error;
+      }
+    } catch (err) {
+      console.error('Login error:', err.message);
+      // Redirect with error param so LoginPage shows it
+      window.location.href = `/login?error=${encodeURIComponent(err.message)}`;
+    }
   };
 
   const saveToken = (newToken) => {

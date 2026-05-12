@@ -1,12 +1,7 @@
 import { useState } from 'react';
 
 const OPTIONS = ['A', 'B', 'C', 'D'];
-const OPTION_KEYS = {
-  A: 'option_a',
-  B: 'option_b',
-  C: 'option_c',
-  D: 'option_d',
-};
+const OPTION_KEYS = { A: 'option_a', B: 'option_b', C: 'option_c', D: 'option_d' };
 
 export default function QuizCard({ question, onAnswer }) {
   const [selected, setSelected] = useState(null);
@@ -16,13 +11,11 @@ export default function QuizCard({ question, onAnswer }) {
     if (selected || revealed) return;
     setSelected(option);
     setRevealed(true);
-
-    // Brief delay to show correct/incorrect before moving on
     setTimeout(() => {
       onAnswer(option);
       setSelected(null);
       setRevealed(false);
-    }, 1200);
+    }, 1400);
   };
 
   return (
@@ -32,10 +25,14 @@ export default function QuizCard({ question, onAnswer }) {
       <div className="quiz-options">
         {OPTIONS.map((opt) => {
           const text = question[OPTION_KEYS[opt]];
-          let optClass = 'quiz-option';
+          const isCorrect = opt === question.correct_option;
+          const isSelected = selected === opt;
 
-          if (revealed && selected === opt) {
-            optClass += ' selected';
+          let optClass = 'quiz-option';
+          if (revealed) {
+            if (isCorrect) optClass += ' correct';
+            else if (isSelected) optClass += ' incorrect';
+            else optClass += ' dimmed';
           }
 
           return (
@@ -46,15 +43,24 @@ export default function QuizCard({ question, onAnswer }) {
               disabled={revealed}
             >
               <span className="quiz-option-letter">{opt}</span>
-              <span>{text}</span>
+              <span className="quiz-option-text">{text}</span>
+              {revealed && isCorrect && <span className="quiz-option-tick">✓</span>}
+              {revealed && isSelected && !isCorrect && <span className="quiz-option-cross">✗</span>}
             </button>
           );
         })}
       </div>
 
+      {revealed && question.explanation && (
+        <div className="quiz-explanation">
+          <span className="quiz-explanation-icon">💡</span>
+          {question.explanation}
+        </div>
+      )}
+
       <div className="quiz-difficulty">
         <span className={`badge badge-${question.difficulty || 'medium'}`}>
-          {question.difficulty?.charAt(0).toUpperCase() + question.difficulty?.slice(1)}
+          {(question.difficulty || 'Medium').charAt(0).toUpperCase() + (question.difficulty || 'medium').slice(1)}
         </span>
       </div>
     </div>

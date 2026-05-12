@@ -10,7 +10,13 @@ import compileRoutes from './routes/compile.routes.js';
 import notesRoutes from './routes/notes.routes.js';
 import aptitudeRoutes from './routes/aptitude.routes.js';
 
-dotenv.config({ path: '../.env' });
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = dirname(__filename);
+dotenv.config({ path: resolve(__dirname, '../.env') });
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;

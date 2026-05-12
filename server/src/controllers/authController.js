@@ -14,7 +14,7 @@ export const register = async (req, res, next) => {
     // --- PASSWORD HASHING LOGIC ---
     // 1. Generate a salt (random data added to the password to make it unguessable)
     const saltRounds = 10;
-    
+
     // 2. Hash the password combined with the salt
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -23,9 +23,9 @@ export const register = async (req, res, next) => {
     const { data: user, error } = await supabase
       .from('users')
       .insert([
-        { 
-          name, 
-          email, 
+        {
+          name,
+          email,
           password_hash: hashedPassword, // Store securely
           provider: 'local'
         }
@@ -34,15 +34,15 @@ export const register = async (req, res, next) => {
       .single();
 
     if (error) {
-       if (error.code === '23505') { // Unique violation
-          return res.status(409).json({ error: 'Email already exists' });
-       }
-       throw error;
+      if (error.code === '23505') { // Unique violation
+        return res.status(409).json({ error: 'Email already exists' });
+      }
+      throw error;
     }
 
-    res.status(201).json({ 
-      message: 'User registered successfully', 
-      user: { id: user.id, email: user.email, name: user.name } 
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: { id: user.id, email: user.email, name: user.name }
     });
 
   } catch (err) {
@@ -81,7 +81,7 @@ export const login = async (req, res, next) => {
     // 3. Generate JWT token for the session
     console.log('[LOGIN] User found:', { id: user.id, email: user.email, role: user.role });
     console.log('[LOGIN] JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'MISSING');
-    
+
     const token = jwt.sign(
       {
         user_id: user.id,
@@ -94,10 +94,10 @@ export const login = async (req, res, next) => {
 
     console.log('[LOGIN] Generated token (first 30 chars):', token?.substring(0, 30));
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Login successful',
       token,
-      user: { id: user.id, email: user.email, name: user.name } 
+      user: { id: user.id, email: user.email, name: user.name }
     });
 
   } catch (err) {
@@ -180,6 +180,11 @@ export const googleLogin = async (req, res, next) => {
     const google_id = authUser.user_metadata?.provider_id || authUser.id;
 
     // Upsert user in our users table
+    if (!supabase) {
+      console.error('[GOOGLE LOGIN] Supabase client is null — check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in server/.env');
+      return res.status(500).json({ error: 'Database not configured on server' });
+    }
+
     const { data: user, error: dbError } = await supabase
       .from('users')
       .upsert(
@@ -196,7 +201,22 @@ export const googleLogin = async (req, res, next) => {
       .single();
 
     if (dbError) {
-      console.error('[GOOGLE LOGIN] DB upsert error:', dbError);
+      console.error('[GOOGLE LOGIN] DB upsert error:', dbError.message, dbError.code);
+      // Handle missing table — either PostgreSQL 42P01 or PostgREST PGRST205
+      const tableNotFound = dbError.code === '42P01' || dbError.code === 'PGRST205' || dbError.message?.includes('does not exist') || dbError.message?.includes('schema cache');
+      if (tableNotFound) {
+        console.warn('[GOOGLE LOGIN] users table not found — issuing JWT from Supabase data directly. Run setup.sql in Supabase to fix permanently.');
+        const fallbackToken = jwt.sign(
+          { user_id: authUser.id, email, role: 'student' },
+          process.env.JWT_SECRET,
+          { expiresIn: process.env.JWT_EXPIRY || '7d' }
+        );
+        return res.status(200).json({
+          message: 'Google login successful (DB tables not yet created)',
+          token: fallbackToken,
+          user: { id: authUser.id, email, name, avatar },
+        });
+      }
       throw dbError;
     }
 

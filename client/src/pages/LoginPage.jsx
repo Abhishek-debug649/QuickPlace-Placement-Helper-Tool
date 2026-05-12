@@ -122,7 +122,22 @@ export default function LoginPage() {
 
           {/* Error */}
           {error && <p className="auth-error">{error}</p>}
-          {urlError && <p className="auth-error">Authentication failed: {urlError}</p>}
+          {urlError && (
+            <div className="auth-error-card">
+              <p className="auth-error-title">⚠️ Sign-in failed</p>
+              <p className="auth-error-desc">
+                {urlError.includes('provider') || urlError.includes('validation')
+                  ? 'Google sign-in is not yet enabled. Go to Supabase → Authentication → Providers → Google and enable it.'
+                  : urlError === 'token_exchange_failed'
+                  ? 'Server could not verify your Google account. Make sure the backend is running.'
+                  : urlError === 'no_token'
+                  ? 'Authentication timed out. Please try again.'
+                  : urlError === 'auth_failed'
+                  ? 'Authentication failed. Check if your Supabase keys are correct.'
+                  : `Error: ${urlError}`}
+              </p>
+            </div>
+          )}
 
           {/* Submit */}
           <button
