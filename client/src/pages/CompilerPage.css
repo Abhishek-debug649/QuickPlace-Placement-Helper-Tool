@@ -34,14 +34,14 @@
 }
 
 .question-select:hover {
-  border-color: rgba(168, 85, 247, 0.4);
+  border-color: rgba(229, 9, 20, 0.4);
   background: rgba(255, 255, 255, 0.06);
 }
 
 .question-select:focus {
   outline: none;
-  border-color: #a855f7;
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+  border-color: #e50914;
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.15);
 }
 
 .question-select option {
@@ -151,7 +151,7 @@
 }
 
 .btn-solved:hover {
-  border-color: rgba(168, 85, 247, 0.4);
+  border-color: rgba(229, 9, 20, 0.4);
   color: #e5e7eb;
 }
 
@@ -236,9 +236,9 @@
 }
 
 .badge-tag {
-  background: rgba(168, 85, 247, 0.1);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.2);
+  background: rgba(229, 9, 20, 0.1);
+  color: #e50914;
+  border: 1px solid rgba(229, 9, 20, 0.2);
 }
 
 .problem-description {
@@ -255,11 +255,11 @@
 }
 
 .problem-description code {
-  background: rgba(168, 85, 247, 0.12);
+  background: rgba(229, 9, 20, 0.1);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 13px;
-  color: #c084fc;
+  color: #e50914;
 }
 
 .problem-description pre {
@@ -292,15 +292,15 @@
 }
 
 .story-toggle:hover {
-  background: rgba(168, 85, 247, 0.08);
-  color: #c084fc;
-  border-color: rgba(168, 85, 247, 0.2);
+  background: rgba(229, 9, 20, 0.08);
+  color: #e50914;
+  border-color: rgba(229, 9, 20, 0.2);
 }
 
 .story-toggle.active {
-  background: rgba(168, 85, 247, 0.12);
-  color: #a855f7;
-  border-color: rgba(168, 85, 247, 0.3);
+  background: rgba(229, 9, 20, 0.12);
+  color: #e50914;
+  border-color: rgba(229, 9, 20, 0.3);
 }
 
 .problem-actions {
@@ -323,9 +323,9 @@
 }
 
 .problem-actions a:hover {
-  background: rgba(99, 102, 241, 0.1);
-  color: #818cf8;
-  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(229, 9, 20, 0.1);
+  color: #e50914;
+  border-color: rgba(229, 9, 20, 0.3);
 }
 
 .problem-empty {
@@ -389,7 +389,7 @@
 
 .custom-input-textarea:focus {
   outline: none;
-  border-color: rgba(168, 85, 247, 0.4);
+  border-color: rgba(229, 9, 20, 0.4);
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -503,13 +503,13 @@
 }
 
 .language-selector select:hover {
-  border-color: rgba(168, 85, 247, 0.4);
+  border-color: rgba(229, 9, 20, 0.4);
 }
 
 .language-selector select:focus {
   outline: none;
-  border-color: #a855f7;
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+  border-color: #e50914;
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.15);
 }
 
 .language-selector select option {
@@ -554,3 +554,404 @@
     min-height: 200px;
   }
 }
+
+/* ── Run Tests Button ── */
+.btn-run-tests {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e50914, #b20710);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+}
+
+.btn-run-tests:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(229, 9, 20, 0.3);
+}
+
+.btn-run-tests:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* ── Test Cases Mode ── */
+.test-cases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px !important;
+}
+
+.test-case-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.test-case-item.passed {
+  border-left: 3px solid #4ade80;
+}
+
+.test-case-item.failed {
+  border-left: 3px solid #f87171;
+}
+
+.test-case-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 0.2s;
+}
+
+.test-case-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.test-case-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.test-status-icon {
+  font-size: 14px;
+}
+
+.test-case-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.expand-icon {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.test-case-details {
+  padding: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.test-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.test-detail-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.test-detail-content {
+  margin: 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #d1d5db;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.test-detail-content.content-error {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.05);
+  border-color: rgba(248, 113, 113, 0.1);
+}
+
+.error-label {
+  color: #f87171;
+}
+
+.error-content {
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.05);
+  border-color: rgba(248, 113, 113, 0.1);
+}
+
+.empty-output {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════
+   Enhanced Layout Styles (Sticky Header, Examples, Console)
+   ═══════════════════════════════════════════════ */
+
+/* Left Question Panel layout adjustments */
+.compiler-left {
+  flex: 0 0 40%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+}
+
+.problem-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0; /* Clear padding so header is flush */
+}
+
+.problem-header {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.01);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.problem-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.problem-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.problem-body::-webkit-scrollbar {
+  width: 6px;
+}
+.problem-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+/* Example test cases inside Problem Panel */
+.problem-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 20px;
+}
+
+.examples-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e5e7eb;
+  margin: 0;
+}
+
+.problem-example-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.example-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e50914;
+  margin: 0;
+}
+
+.example-card-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.example-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.example-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.example-pre {
+  margin: 0;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 13px;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Tabbed Console Container Styles */
+.console-container {
+  display: flex;
+  flex-direction: column;
+  background: #141622 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px;
+  overflow: hidden;
+  height: 240px;
+  min-height: 240px !important;
+  max-height: 240px !important;
+  flex-shrink: 0;
+}
+
+.console-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  padding: 0 16px !important;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.console-tabs {
+  display: flex;
+  gap: 4px;
+  height: 100%;
+  align-items: flex-end;
+}
+
+.console-tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  outline: none;
+}
+
+.console-tab-btn:hover {
+  color: #f3f4f6;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.console-tab-btn.active {
+  color: #fff;
+  border-bottom-color: #e50914;
+  background: rgba(229, 9, 20, 0.05);
+}
+
+.tab-loading-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #e50914;
+  border-radius: 50%;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 0.3; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1.2); }
+}
+
+.console-body {
+  flex: 1;
+  overflow: hidden;
+  background: #0f111a;
+  height: calc(100% - 44px);
+}
+
+.console-input-textarea {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  padding: 16px;
+  color: #e5e7eb;
+  font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 13px;
+  resize: none;
+  outline: none;
+  line-height: 1.6;
+}
+
+.console-input-textarea::placeholder {
+  color: #4b5563;
+}
+
+/* Adjust Terminal styles for Console integration */
+.console-container .terminal-body {
+  height: 100% !important;
+  max-height: none !important;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.console-container .terminal-running,
+.console-container .terminal-empty {
+  padding: 24px 16px;
+}
+
+.terminal-status-running {
+  color: #e50914;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Adjustments for compiler-right layout space */
+.compiler-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.editor-container {
+  flex: 1;
+  min-height: 200px !important;
+  display: flex;
+  flex-direction: column;
+}
+

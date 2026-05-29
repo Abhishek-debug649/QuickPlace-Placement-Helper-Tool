@@ -5,7 +5,6 @@ import AuthCallback from './pages/AuthCallback'
 import ProtectedRoute from './components/ProtectedRoute'
 import DashboardLayout from './pages/DashboardLayout'
 import DashboardOverview from './pages/DashboardOverview'
-import CompilerPage from './pages/CompilerPage'
 import NotesPage from './pages/NotesPage'
 import AptitudePage from './pages/AptitudePage'
 import PatternsPage from './pages/PatternsPage'
@@ -29,7 +28,6 @@ function App() {
         <Route index              element={<DashboardOverview />} />
         <Route path="companies"  element={<CompaniesPage />} />
         <Route path="patterns"   element={<PatternsPage />} />
-        <Route path="compiler"   element={<CompilerPage />} />
         <Route path="notes"      element={<NotesPage />} />
         <Route path="aptitude"   element={<AptitudePage />} />
         <Route path="profile"    element={<ProfilePage />} />

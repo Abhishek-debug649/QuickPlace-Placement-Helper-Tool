@@ -44,11 +44,11 @@ function buildHeatmapGrid(apiData) {
 
 function getHeatColor(count) {
   if (count === 0) return 'rgba(255,255,255,0.04)';
-  if (count === 1) return 'rgba(168,85,247,0.25)';
-  if (count === 2) return 'rgba(168,85,247,0.45)';
-  if (count === 3) return 'rgba(168,85,247,0.62)';
-  if (count === 4) return 'rgba(168,85,247,0.80)';
-  return '#a855f7';
+  if (count === 1) return 'rgba(229,9,20,0.2)';
+  if (count === 2) return 'rgba(229,9,20,0.4)';
+  if (count === 3) return 'rgba(229,9,20,0.6)';
+  if (count === 4) return 'rgba(229,9,20,0.8)';
+  return '#e50914';
 }
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];

@@ -1,8 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { FiExternalLink, FiCode, FiChevronDown, FiChevronUp, FiCheckCircle, FiCircle } from 'react-icons/fi';
+import { FiExternalLink, FiCode, FiChevronDown, FiChevronUp, FiCheckCircle, FiCircle, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import ProblemPanel from '../components/compiler/ProblemPanel';
+import LanguageSelector from '../components/compiler/LanguageSelector';
+import Terminal from '../components/compiler/Terminal';
 import './CompaniesPage.css';
+
+const CodeEditor = lazy(() => import('../components/compiler/CodeEditor'));
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -12,7 +18,18 @@ const COMPANIES = [
   { slug: 'google',    name: 'Google',     emoji: '🔍', color: '#4285f4', bg: 'rgba(66,133,244,0.08)',  desc: 'Search & Cloud · Algorithmic Thinking' },
   { slug: 'microsoft', name: 'Microsoft',  emoji: '🪟', color: '#00a4ef', bg: 'rgba(0,164,239,0.08)',   desc: 'Enterprise software · OOP & System Design' },
   { slug: 'meta',      name: 'Meta',       emoji: '👥', color: '#0668e1', bg: 'rgba(6,104,225,0.08)',   desc: 'Social media · Graph Problems & Scalability' },
+  { slug: 'infosys',   name: 'Infosys',    emoji: '🏢', color: '#007cc3', bg: 'rgba(0,124,195,0.08)',   desc: 'HackWithINFY & core CS concepts' },
 ];
+
+const DEFAULT_CODE = {
+  python: '# Write your Python code here\n\ndef solution():\n    pass\n\nsolution()\n',
+  javascript: '// Write your JavaScript code here\n\nfunction solution() {\n  \n}\n\nsolution();\n',
+  java: '// Write your Java code here\n\npublic class Main {\n    public static void main(String[] args) {\n        \n    }\n}\n',
+  cpp: '// Write your C++ code here\n\n#include <iostream>\nusing namespace std;\n\nint main() {\n    \n    return 0;\n}\n',
+  c: '// Write your C code here\n\n#include <stdio.h>\n\nint main() {\n    \n    return 0;\n}\n',
+};
+
+const LANG_IDS = { python: 71, javascript: 63, java: 62, cpp: 54, c: 50 };
 
 const DIFFICULTY_ORDER = { easy: 1, medium: 2, hard: 3 };
 
@@ -24,6 +41,24 @@ export default function CompaniesPage() {
   const [solvedIds, setSolvedIds]     = useState(new Set());
   const [loadingQ, setLoadingQ]       = useState(false);
   const [filter, setFilter]           = useState('all'); // all | easy | medium | hard
+
+  // COMPILER STATE
+  const [solvingQuestion, setSolvingQuestion] = useState(null);
+  const [language, setLanguage] = useState(
+    () => localStorage.getItem('qp_language') || 'python'
+  );
+  const [code, setCode] = useState(DEFAULT_CODE[language] || DEFAULT_CODE.python);
+  const [stdin, setStdin] = useState('');
+  const [output, setOutput] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [testResults, setTestResults] = useState(null);
+  const [isTesting, setIsTesting] = useState(false);
+
+  // Update code template when language changes
+  useEffect(() => {
+    localStorage.setItem('qp_language', language);
+    setCode(DEFAULT_CODE[language] || DEFAULT_CODE.python);
+  }, [language]);
 
   const token   = localStorage.getItem('qp_token');
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -90,8 +125,108 @@ export default function CompaniesPage() {
   };
 
   const handlePractice = (question) => {
-    navigate(`/dashboard/compiler?company=${selected}`);
+    setSolvingQuestion(question);
     toast(`Opening ${question.title} in compiler`, { icon: '💻' });
+  };
+
+  const handleRun = async () => {
+    setIsRunning(true);
+    setOutput(null);
+    setTestResults(null);
+    try {
+      const res = await fetch(`${API_URL}/api/compile`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          source_code: code,
+          language_id: LANG_IDS[language],
+          stdin: stdin,
+        }),
+      });
+      
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Execution failed');
+        }
+        setOutput(data);
+      } else {
+        const text = await res.text();
+        throw new Error(`Server Error (${res.status}): non-JSON response received. Check your API URL or backend logs.`);
+      }
+    } catch (err) {
+      setOutput({ stderr: err.message, status: { description: 'Error' } });
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleRunTests = async () => {
+    if (!solvingQuestion?.test_cases || solvingQuestion.test_cases.length === 0) {
+      toast.error('No test cases available for this question.');
+      return;
+    }
+    
+    setIsTesting(true);
+    setTestResults([]);
+    setOutput(null);
+    
+    try {
+      const results = [];
+      for (const [index, testCase] of solvingQuestion.test_cases.entries()) {
+        const res = await fetch(`${API_URL}/api/compile`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            source_code: code,
+            language_id: LANG_IDS[language],
+            stdin: testCase.input,
+          }),
+        });
+        
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || 'Execution failed');
+          }
+          
+          const actualOutput = (data.stdout || '').trim();
+          const expectedOutput = (testCase.expected_output || '').trim();
+          const passed = data.status?.id === 3 && actualOutput === expectedOutput;
+          
+          results.push({
+            id: index + 1,
+            passed,
+            input: testCase.input,
+            expected: expectedOutput,
+            actual: actualOutput,
+            error: data.stderr || data.compile_output || null,
+            time: data.time,
+            memory: data.memory
+          });
+          
+          setTestResults([...results]);
+        } else {
+          throw new Error('Server returned non-JSON response');
+        }
+      }
+      
+      const allPassed = results.every(r => r.passed);
+      if (allPassed) {
+        toast.success('All test cases passed! 🎉');
+        if (!solvedIds.has(solvingQuestion.id)) {
+          handleMarkSolved(solvingQuestion.id, false);
+        }
+      } else {
+        toast.error('Some test cases failed. Keep trying!');
+      }
+    } catch (err) {
+      toast.error(`Testing error: ${err.message}`);
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   const selectedCompany = COMPANIES.find(c => c.slug === selected);
@@ -174,12 +309,6 @@ export default function CompaniesPage() {
                   {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
               ))}
-              <button
-                className="cq-practice-all-btn"
-                onClick={() => navigate(`/dashboard/compiler?company=${selected}`)}
-              >
-                <FiCode size={14} /> Practice All
-              </button>
             </div>
           </div>
 
@@ -249,6 +378,95 @@ export default function CompaniesPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* COMPILER MODAL OVERLAY */}
+      {solvingQuestion && createPortal(
+        <div className="compiler-modal-overlay">
+          <div className="compiler-modal-content">
+            <div className="compiler-modal-header">
+              <h3>{solvingQuestion.title}</h3>
+              <button className="compiler-close-btn" onClick={() => setSolvingQuestion(null)}>
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            <div className="compiler-split">
+              {/* Left: Problem Panel */}
+              <div className="compiler-left">
+                <ProblemPanel
+                  question={solvingQuestion}
+                  isSolved={solvedIds.has(solvingQuestion.id)}
+                  onMarkSolved={() => handleMarkSolved(solvingQuestion.id, solvedIds.has(solvingQuestion.id))}
+                />
+              </div>
+
+              {/* Right: Editor + Terminal */}
+              <div className="compiler-right">
+                <div className="editor-toolbar">
+                  <LanguageSelector language={language} onChange={setLanguage} />
+                  <div className="editor-actions">
+                    <button
+                      className="btn-run"
+                      onClick={handleRun}
+                      disabled={isRunning || isTesting}
+                    >
+                      {isRunning ? (
+                        <>
+                          <span className="run-spinner" /> Running…
+                        </>
+                      ) : (
+                        <>▶ Run</>
+                      )}
+                    </button>
+                    {solvingQuestion?.test_cases?.length > 0 && (
+                      <button
+                        className="btn-run-tests"
+                        onClick={handleRunTests}
+                        disabled={isRunning || isTesting}
+                        style={{ marginLeft: '8px' }}
+                      >
+                        {isTesting ? (
+                          <>
+                            <span className="run-spinner" /> Testing…
+                          </>
+                        ) : (
+                          <>🧪 Run Tests</>
+                        )}
+                      </button>
+                    )}
+                    <button
+                      className={`btn-solved ${solvedIds.has(solvingQuestion.id) ? 'active' : ''}`}
+                      onClick={() => handleMarkSolved(solvingQuestion.id, solvedIds.has(solvingQuestion.id))}
+                    >
+                      {solvedIds.has(solvingQuestion.id) ? '✓ Solved' : '☐ Mark Solved'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="editor-container">
+                  <Suspense fallback={<div className="editor-loading">Loading editor…</div>}>
+                    <CodeEditor
+                      language={language}
+                      value={code}
+                      onChange={(v) => setCode(v || '')}
+                    />
+                  </Suspense>
+                </div>
+
+                <Terminal 
+                  stdin={stdin}
+                  setStdin={setStdin}
+                  output={output} 
+                  isRunning={isRunning} 
+                  testResults={testResults}
+                  isTesting={isTesting}
+                />
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

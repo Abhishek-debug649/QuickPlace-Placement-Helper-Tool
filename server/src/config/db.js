@@ -9,14 +9,15 @@ const __dirname  = dirname(__filename);
 dotenv.config({ path: resolve(__dirname, '../../.env') });
 
 const supabaseUrl     = process.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!supabaseUrl || !supabaseKey) {
   console.warn('⚠️  Supabase credentials not set. Database features will not work.');
 } else {
   console.log('✅ Supabase connected:', supabaseUrl);
 }
 
-export const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
   : null;
+

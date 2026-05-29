@@ -18,7 +18,6 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { name: 'Dashboard', path: '/dashboard', icon: <FiHome /> },
     { name: 'Companies', path: '/dashboard/companies', icon: <FiBriefcase /> },
     { name: 'Patterns', path: '/dashboard/patterns', icon: <FiGrid /> },
-    { name: 'Compiler', path: '/dashboard/compiler', icon: <FiTerminal /> },
     { name: 'Notes', path: '/dashboard/notes', icon: <FiFileText /> },
     { name: 'Aptitude', path: '/dashboard/aptitude', icon: <FiCpu /> },
     { name: 'Profile', path: '/dashboard/profile', icon: <FiUser /> },

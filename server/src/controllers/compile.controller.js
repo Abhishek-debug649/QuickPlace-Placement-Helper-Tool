@@ -1,14 +1,14 @@
 import { LANGUAGES } from '../config/judge0.js';
 
-const PISTON_LANGS = {
-  71: 'python',
-  63: 'javascript',
-  62: 'java',
-  54: 'cpp',
-  50: 'c'
+const WANDBOX_LANGS = {
+  71: 'cpython-head',       // Python
+  63: 'nodejs-20.17.0',     // JavaScript
+  62: 'openjdk-jdk-22+36',  // Java
+  54: 'gcc-head',           // C++
+  50: 'gcc-head-c'          // C
 };
 
-// POST /api/compile — Execute user code via Piston API
+// POST /api/compile — Execute user code via Wandbox API
 export const executeCode = async (req, res, next) => {
   try {
     const { source_code, language_id, stdin } = req.body;
@@ -25,37 +25,41 @@ export const executeCode = async (req, res, next) => {
       });
     }
 
-    const language = PISTON_LANGS[language_id];
+    const compilerName = WANDBOX_LANGS[language_id];
 
-    // Submit to Piston API
-    const submitRes = await fetch('https://emkc.org/api/v2/piston/execute', {
+    // Submit to Wandbox API
+    const submitRes = await fetch('https://wandbox.org/api/compile.json', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        language: language,
-        version: '*',
-        files: [
-          {
-            content: source_code
-          }
-        ],
+        compiler: compilerName,
+        code: source_code,
         stdin: stdin || '',
       }),
     });
 
     if (!submitRes.ok) {
       const errText = await submitRes.text();
-      throw new Error(`Piston API failed (${submitRes.status}): ${errText}`);
+      throw new Error(`Wandbox API failed (${submitRes.status}): ${errText}`);
     }
 
     const data = await submitRes.json();
 
-    const stdout = data.run?.stdout || null;
-    const stderr = data.run?.stderr || null;
-    const compile_output = data.compile?.stderr || null;
-    const isAccepted = data.run?.code === 0 && !stderr && !compile_output;
+    const stdout = data.program_output || null;
+    const stderr = data.program_error || null;
+    
+    // Combine compiler output and errors
+    let compile_output = null;
+    if (data.compiler_error || data.compiler_output) {
+      compile_output = [data.compiler_error, data.compiler_output].filter(Boolean).join('\n');
+    }
+
+    // Wandbox returns status as a string integer (e.g. "0" for success)
+    // Note: status "0" does not guarantee compilation success if there's compiler_error for some compilers,
+    // but typically compilation error returns non-zero status.
+    const isAccepted = data.status === "0" && !stderr;
 
     res.json({
       stdout,

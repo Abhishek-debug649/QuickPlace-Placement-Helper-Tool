@@ -25,7 +25,18 @@ export default function ProblemPanel({ question, isSolved, onMarkSolved }) {
   return (
     <div className="problem-panel">
       <div className="problem-header">
-        <h2 className="problem-title">{question.title}</h2>
+        <div className="problem-header-top">
+          <h2 className="problem-title">{question.title}</h2>
+          {question.story_description && (
+            <button
+              type="button"
+              className={`story-toggle ${storyMode ? 'active' : ''}`}
+              onClick={() => setStoryMode(!storyMode)}
+            >
+              📖 {storyMode ? 'Standard' : 'Story Mode'}
+            </button>
+          )}
+        </div>
         <div className="problem-badges">
           <span className={difficultyClass}>
             {question.difficulty?.charAt(0).toUpperCase() + question.difficulty?.slice(1)}
@@ -43,33 +54,49 @@ export default function ProblemPanel({ question, isSolved, onMarkSolved }) {
         </div>
       </div>
 
-      {question.story_description && (
-        <button
-          className={`story-toggle ${storyMode ? 'active' : ''}`}
-          onClick={() => setStoryMode(!storyMode)}
-        >
-          📖 {storyMode ? 'Standard Mode' : 'Story Mode'}
-        </button>
-      )}
+      <div className="problem-body">
+        <div className="problem-description">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {description}
+          </ReactMarkdown>
+        </div>
 
-      <div className="problem-description">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-          {description}
-        </ReactMarkdown>
-      </div>
-
-      <div className="problem-actions">
-        <button
-          className={`btn-solved ${isSolved ? 'active' : ''}`}
-          onClick={onMarkSolved}
-        >
-          {isSolved ? '✓ Solved' : 'Mark as Solved ✓'}
-        </button>
-        {question.external_url && (
-          <a href={question.external_url} target="_blank" rel="noopener noreferrer">
-            🔗 Solve on LeetCode
-          </a>
+        {/* Predefined Test Cases (Examples) */}
+        {question.test_cases && question.test_cases.length > 0 && (
+          <div className="problem-examples">
+            <h3 className="examples-heading">Examples</h3>
+            {question.test_cases.slice(0, 3).map((tc, index) => (
+              <div key={index} className="problem-example-card">
+                <h4 className="example-card-title">Example {index + 1}</h4>
+                <div className="example-card-fields">
+                  <div className="example-field">
+                    <span className="example-label">Input:</span>
+                    <pre className="example-pre">{tc.input}</pre>
+                  </div>
+                  <div className="example-field">
+                    <span className="example-label">Output:</span>
+                    <pre className="example-pre">{tc.expected_output}</pre>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
+
+        <div className="problem-actions">
+          <button
+            type="button"
+            className={`btn-solved ${isSolved ? 'active' : ''}`}
+            onClick={onMarkSolved}
+          >
+            {isSolved ? '✓ Solved' : 'Mark as Solved ✓'}
+          </button>
+          {question.external_url && (
+            <a href={question.external_url} target="_blank" rel="noopener noreferrer">
+              🔗 Solve on LeetCode
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

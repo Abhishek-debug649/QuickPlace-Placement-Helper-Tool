@@ -7,9 +7,9 @@
 }
 
 body {
-  font-family: 'Outfit', sans-serif;
-  background: var(--bg-primary, #0d0b1e);
-  color: var(--text-primary, #f3f4f6);
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-primary, #141414);
+  color: var(--text-primary, #e5e5e5);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -24,7 +24,7 @@ button, input, textarea, select {
 img { max-width: 100%; display: block; }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }

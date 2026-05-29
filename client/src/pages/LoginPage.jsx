@@ -28,6 +28,10 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    // Clear URL errors
+    if (searchParams.has('error')) {
+      navigate('/login', { replace: true });
+    }
 
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
@@ -66,7 +70,12 @@ export default function LoginPage() {
         <button
           type="button"
           className="auth-google-btn"
-          onClick={login}
+          onClick={() => {
+            if (searchParams.has('error')) {
+              navigate('/login', { replace: true });
+            }
+            login();
+          }}
         >
           <FcGoogle size={20} />
           Continue with Google

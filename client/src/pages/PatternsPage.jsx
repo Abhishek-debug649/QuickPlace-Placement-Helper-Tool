@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { FiSearch, FiChevronDown, FiCheck, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { FiSearch, FiChevronDown, FiCheck, FiMaximize2, FiMinimize2, FiExternalLink, FiStar, FiLink } from 'react-icons/fi';
 import PATTERNS_DATA from '../data/patternsData';
 import './PatternsPage.css';
 
@@ -17,6 +17,21 @@ function loadProgress() {
 
 function saveProgress(progress) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+}
+
+const REVIEW_KEY = 'qp_patterns_reviews';
+
+function loadReviews() {
+  try {
+    const raw = localStorage.getItem(REVIEW_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveReviews(reviews) {
+  localStorage.setItem(REVIEW_KEY, JSON.stringify(reviews));
 }
 
 // Build a question key from IDs
@@ -37,6 +52,7 @@ const FILTERS = [
 // ═══════════════════════════════════════════════════════════════
 export default function PatternsPage() {
   const [progress, setProgress] = useState(loadProgress);
+  const [reviews, setReviews] = useState(loadReviews);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [expandedCats, setExpandedCats] = useState(new Set());
@@ -46,6 +62,10 @@ export default function PatternsPage() {
   useEffect(() => {
     saveProgress(progress);
   }, [progress]);
+
+  useEffect(() => {
+    saveReviews(reviews);
+  }, [reviews]);
 
   // Toggle a question
   const toggleQuestion = useCallback((catId, subId, qIdx) => {
@@ -57,6 +77,16 @@ export default function PatternsPage() {
       } else {
         next[key] = true;
       }
+      return next;
+    });
+  }, []);
+
+  const toggleReview = useCallback((catId, subId, qIdx) => {
+    const key = qKey(catId, subId, qIdx);
+    setReviews((prev) => {
+      const next = { ...prev };
+      if (next[key]) delete next[key];
+      else next[key] = true;
       return next;
     });
   }, []);
@@ -155,7 +185,7 @@ export default function PatternsPage() {
           // Search within questions or sub-pattern name
           if (q) {
             const nameMatch = sub.name.toLowerCase().includes(q);
-            const qMatch = sub.questions.some((qn) => qn.toLowerCase().includes(q));
+            const qMatch = sub.questions.some((qn) => (typeof qn === 'string' ? qn : qn.name).toLowerCase().includes(q));
             if (!nameMatch && !qMatch) return null;
           }
 
@@ -203,8 +233,8 @@ export default function PatternsPage() {
             <svg width="52" height="52" viewBox="0 0 52 52">
               <defs>
                 <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#a855f7" />
-                  <stop offset="100%" stopColor="#06b6d4" />
+                  <stop offset="0%" stopColor="#e50914" />
+                  <stop offset="100%" stopColor="#b20710" />
                 </linearGradient>
               </defs>
               <circle className="overall-progress-ring-bg" cx="26" cy="26" r="22" />
@@ -356,27 +386,75 @@ export default function PatternsPage() {
                           {/* Questions Body */}
                           <div className="sub-pattern-body">
                             <div className="questions-list">
-                              {sub.questions.map((qName, qi) => {
+                              <div className="questions-list-header">
+                                <div className="q-col-name">Question Name</div>
+                                <div className="q-col-diff">Difficulty</div>
+                                <div className="q-col-link">Link</div>
+                                <div className="q-col-review">Review</div>
+                              </div>
+                              {sub.questions.map((q, qi) => {
                                 const key = qKey(cat.id, sub.id, qi);
                                 const isDone = !!progress[key];
+                                const isReview = !!reviews[key];
+                                // Support both old string format and new object format
+                                const qName = typeof q === 'string' ? q : q.name;
+                                const qUrl  = typeof q === 'string' ? null : q.url;
+                                const qDiff = typeof q === 'string' ? null : q.difficulty;
+
+                                const diffClass = qDiff === 'easy' ? 'diff-easy' : qDiff === 'medium' ? 'diff-medium' : qDiff === 'hard' ? 'diff-hard' : '';
+                                const diffLabel = qDiff === 'easy' ? 'Easy' : qDiff === 'medium' ? 'Medium' : qDiff === 'hard' ? 'Hard' : '';
 
                                 return (
                                   <div
                                     key={qi}
                                     className={`question-item ${isDone ? 'done' : ''}`}
-                                    onClick={() => toggleQuestion(cat.id, sub.id, qi)}
                                   >
-                                    <span className="question-index">{qi + 1}</span>
-                                    <div
-                                      className="question-checkbox"
-                                      style={{
-                                        background: isDone ? cat.color : 'transparent',
-                                        borderColor: isDone ? cat.color : undefined,
-                                      }}
-                                    >
-                                      {isDone && <FiCheck className="question-checkbox-icon" />}
+                                    <div className="q-col-name">
+                                      <div
+                                        className="question-checkbox"
+                                        onClick={(e) => { e.stopPropagation(); toggleQuestion(cat.id, sub.id, qi); }}
+                                        style={{
+                                          background: isDone ? cat.color : 'transparent',
+                                          borderColor: isDone ? cat.color : undefined,
+                                        }}
+                                      >
+                                        {isDone && <FiCheck className="question-checkbox-icon" />}
+                                      </div>
+                                      <span className="question-name" onClick={() => toggleQuestion(cat.id, sub.id, qi)}>{qName}</span>
                                     </div>
-                                    <span className="question-name">{qName}</span>
+
+                                    <div className="q-col-diff">
+                                      {qDiff && (
+                                        <span className={`question-difficulty ${diffClass}`}>
+                                          {diffLabel}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    <div className="q-col-link">
+                                      {qUrl && (
+                                        <a
+                                          className="question-link-btn"
+                                          href={qUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          title="Open Problem"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <FiLink />
+                                        </a>
+                                      )}
+                                    </div>
+
+                                    <div className="q-col-review">
+                                      <button 
+                                        className={`question-review-btn ${isReview ? 'active' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); toggleReview(cat.id, sub.id, qi); }}
+                                        title={isReview ? "Unmark Review" : "Mark for Review"}
+                                      >
+                                        <FiStar className={isReview ? 'star-filled' : ''} fill={isReview ? '#facc15' : 'none'} />
+                                      </button>
+                                    </div>
                                   </div>
                                 );
                               })}
